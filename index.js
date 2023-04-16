@@ -1,14 +1,31 @@
+require("dotenv").config();
+
 const express = require("express");
+const mongoose = require("mongoose");
 var bodyParser = require("body-parser");
 
 //Database
-const database = require("/database");
+const database = require("./database/database");
+
+// Models
+const BookModel = require("./database/book");
+const AuthorModel = require("./database/author");
+const PublicationModel = require("./database/publication");
 
 // initialize express
 const managelibrary = express();
 
 managelibrary.use(bodyParser.urlencoded({extended: true}));
 managelibrary.use(bodyParser.json());
+
+mongoose.connect(process.env.MONGO_URL,
+{
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false,
+    useCreateIndex: true
+}
+).then(() => console.log("Connection Established"));
 
 
 /* 
@@ -18,8 +35,9 @@ Access        Public
 Parameters    None
 Methods       Get
 */
-managelibrary.get("/", (req, res) => {
-    return res.json({books: database.books});
+managelibrary.get("/",async (req, res) => {
+    const getAllBooks = await BookModel.find();
+    return res.json({getAllBooks});
 });
 
 
@@ -90,8 +108,9 @@ Access        Public
 Parameters    None
 Methods       Get
 */
-managelibrary.get("/author", (req, res) => {
-    return res.json({authors: database.author})
+managelibrary.get("/",async (req, res) => {
+    const getAllAuthors = await AuthorModel.find();
+    return res.json({getAllAuthors});
 });
 
 
@@ -142,8 +161,9 @@ Access        Public
 Parameters    None
 Methods       Get
 */
-managelibrary.get("/publications", (req, res) => {
-    return res.json({publications: database.author})
+managelibrary.get("/",async (req, res) => {
+    const getAllPublications = await PublicationModel.find();
+    return res.json({getAllPublications});
 });
 
 
