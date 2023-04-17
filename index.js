@@ -36,7 +36,7 @@ Parameters    None
 Methods       Get
 */
 managelibrary.get("/",async (req, res) => {
-    const getAllBooks = await BookModel.find();
+    const getAllBooks = await BookModel.findOne({ISBN: req.params.isbn});
     return res.json({getAllBooks});
 });
 
@@ -48,12 +48,12 @@ Access        Public
 Parameters    isbn
 Methods       Get
 */
-managelibrary.get("/is/:isbn", (req, res) => {
-    const getSpecificBook = database.books.filter(
-        (book) => book.ISBN === req.params.isbn
-    );
+managelibrary.get("/is/:isbn",async (req, res) => {
 
-    if(getSpecificBook.length === 0) {
+    const getSpecificBook = await BookModel.findOne({ISBN: req.params.isbn});
+
+// Null !0=1; !1=0
+    if(!getSpecificBook) {
         return res.json({error: 'No book found for the ISBN of ${req.params.isbn}'})
     }
 
@@ -68,17 +68,16 @@ Access        Public
 Parameters    category
 Methods       Get
 */
-managelibrary.get("/c/:category", (req, res) => {
-    const getSpecificBook = database.books.filter(
-        (book) => book.category.includes(req.params.category)
-    )
+managelibrary.get("/c/:category",async (req, res) => {
+    const getSpecificBook = await BookModel.findOne({category: req.params.category});
 
-    if(getSpecificBook.length === 0) {
+// Null !0=1; !1=0
+    if(!getSpecificBook) {
         return res.json({error: 'No book found for the category of ${req.params.category}'})
     }
-});
-    
+
     return res.json({books: getSpecificBook});
+});  
 
 
 /* 
@@ -177,10 +176,13 @@ Access        Public
 Parameters    None
 Methods       Post
 */
-managelibrary.post("/book/new", (req, res) => {
-    const newBook = req.body;
-    database.books.push(newBook);
-    return res.json({updatedBooks: database.books})
+managelibrary.post("/book/new",async (req, res) => {
+    const { newBook } = req.body;
+    const addNewBook = BookModel.create(newBook);
+    return res.json({
+        books: addNewBook,
+        message: "Book was added!"
+    });
 });
 
 
@@ -192,10 +194,13 @@ Access        Public
 Parameters    None
 Methods       Post
 */
-managelibrary.post("/author/new", (req, res) => {
-    const newAuthor = req.body;
-    database.author.push(newAuthor);
-    return res.json({updatedAuthor: database.author})
+managelibrary.post("/author/new",async (req, res) => {
+    const { newAuthor } = req.body;
+    const addNewAuthor = BookModel.create(newAuthor);
+    return res.json({
+        authors: addNewBook,
+        message: "Author was added!"
+    });
 });
 
 
@@ -206,11 +211,92 @@ Access        Public
 Parameters    None
 Methods       Post
 */
-managelibrary.post("/publication/new", (req, res) => {
-    const newPublication = req.body;
-    database.publication.push(newPublication);
-    return res.json({updatedPublication: database.newPublication})
+managelibrary.post("/publication/new",async (req, res) => {
+    const { newPublication } = req.body;
+    const addNewPublication = BookModel.create(newPublication);
+    return res.json({
+        publications: addNewPublication,
+        message: "Publication was added!"
+    });
 });
+
+
+
+/***********Put************/
+/* 
+Route         /book/update
+Description   Update book on isbn
+Access        Public
+Parameters    isbn
+Methods       Put
+*/
+managelibrary.put("/book/update/:isbn", async (req, res) => {
+    const updateBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn
+        },
+        {
+            title: req.body.bookTitle
+        },
+        {
+            new: true
+        }
+    );
+
+    return res.json({
+        books: updateBook
+    });
+});
+
+
+
+/*******Updating new author*******/
+/* 
+Route         /publication/update/book
+Description   Update/Add new publications
+Access        Public
+Parameters    isbn
+Methods       Put
+*/
+managelibrary.put("/book/author/update/:isbn", async(req, res) =>{
+    //update book database
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn
+        },
+        {
+            $push: {
+                authors: req.body.newAuthor
+            }
+        },
+        {
+            new: true
+        }
+    );
+    //update the author database
+    const updatedAuthor = await AuthorModel.findOneAndUpdate(
+        {
+            id: req.body.newAuthor
+        },
+        {
+            $addToSet: {
+                books: req.params.isbn
+            }
+        },
+        {
+            new: true
+        }
+    );
+
+    return res.json(
+        {
+            bookss: updatedBook,
+            authors: updatedAuthor,
+            message: "New author was added"
+        }
+    );
+});
+
 
 
 /* 
@@ -306,6 +392,6 @@ managelibrary.delete("/book/delete/author/:isbn/:authorId", (req, res) => {
 
 
 
-managelibrary.listen(3000, () =>{
+managelibrary.listen(4000, () =>{
     console.log("Server is up and running");
 });
