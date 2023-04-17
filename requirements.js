@@ -49,3 +49,12 @@
   // 1. Delete a book --> Done
   // 2. Delete author from book 
   // 3. Delete author from book and related book from author
+
+
+
+// Schema - Blueprint of how data has to be constructed
+// MongoDb is Schemaless
+// Mongoose has Schema
+// Mongoose - Validation, Relationship with other data
+// Model - Document model of MongoDB
+// Schema -> Model -> Use them
