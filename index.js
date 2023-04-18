@@ -341,14 +341,16 @@ Access        Public
 Parameters    isbn
 Methods       Delete
 */
-managelibrary.delete("/book/delete/:isbn", (req, res) => {
+managelibrary.delete("/book/delete/:isbn",async (req, res) => {
     // Whichever book that doesn't match with the isbn, just send it to an updatedBookDatabase array
     // and rest will be filtered out
-    const updatedBookDatabase= database.books.filter(
-        (book) => book.ISBN !== req.params.isbn
-    )
-    database.books = updatedBookDatabase;
-    return res.json({books: database.books});
+    const updatedBookDatabase = await BookModel.findOneAndDelete(
+        {
+            ISBN: req.params.isbn
+        }
+    );
+
+    return res.json(updatedBookDatabase);
 });
 
 
